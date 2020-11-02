@@ -83,23 +83,11 @@ def create_vertex_buffer():
 
 @contextlib.contextmanager
 def load_shaders():
-    shaders = {
-        gl.GL_VERTEX_SHADER: '''\
-            #version 330 core
-            layout(location = 0) in vec3 vertexPosition_modelspace;
-            void main(){
-              gl_Position.xyz = vertexPosition_modelspace;
-              gl_Position.w = 1.0;
-            }
-            ''',
-        gl.GL_FRAGMENT_SHADER: '''\
-            #version 330 core
-            out vec3 color;
-            void main(){
-              color = vec3(1,0,0);
-            }
-            '''
-        }
+    with open('fragment_shader.txt','r',encoding='utf-8') as f:
+        fs_text = ' '.join(f.readlines())
+    with open('vertex_shader.txt','r',encoding='utf-8') as f:
+        vs_text = ' '.join(f.readlines())
+    shaders = {gl.GL_VERTEX_SHADER:vs_text,gl.GL_FRAGMENT_SHADER:fs_text}
     log.debug('creating the shader program')
     program_id = gl.glCreateProgram()
     try:
