@@ -3,6 +3,11 @@ from OpenGL.GL import *
 from OpenGL.GL.shaders import compileProgram, compileShader,ShaderProgram
 import numpy as np
 import pyrr
+from PIL import Image
+
+# glfw callback functions
+def window_resize(window, width, height):
+    glViewport(0, 0, width, height)
 
 # initializing glfw library
 if not glfw.init():
@@ -27,51 +32,102 @@ if not window:
 
 # set window's position
 glfw.set_window_pos(window, 400, 200)
-
+# set the callback function for window resize
+glfw.set_window_size_callback(window, window_resize)
 # make the context current
 glfw.make_context_current(window)
-#front
-vertices = [0.5,  0.5, 0.5, 1.0, 0.0, 0.0,      #right top
-             0.5, -0.5, 0.5, 0.0, 1.0, 0.0,     #right bottom
-             -0.5, -0.5, 0.5, 0.0, 1.0, 0.0,    #left bottom
-             -0.5, 0.5, 0.5, 0.0, 0.0, 1.0,      #left top
-#back
-             0.5,  0.5, -0.5, 1.0, 0.0, 0.0,     #right top
-             0.5, -0.5, -0.5, 0.0, 1.0, 0.0,     #right bottom
-             -0.5, -0.5, -0.5, 0.0, 1.0, 0.0,    #left bottom
-             -0.5, 0.5, -0.5, 0.0, 0.0, 1.0      #left top
-]
-indices = [0,1,2,0,2,3,     #front
-            3,2,6,3,6,7,    #left
-            0,4,5,0,5,2,    #right
-            3,4,5,3,5,6,    #back
-            4,0,3,4,3,7,    #top
-            5,2,1,5,6,2     #bottom
-        ]
+
+vertices = [-0.5, -0.5,  0.5,  1.0, 0.0, 0.0,  0.0, 0.0,
+             0.5, -0.5,  0.5,  0.0, 1.0, 0.0,  1.0, 0.0,
+             0.5,  0.5,  0.5,  0.0, 0.0, 1.0,  1.0, 1.0,
+            -0.5,  0.5,  0.5,  1.0, 1.0, 1.0,  0.0, 1.0,
+
+            -0.5, -0.5, -0.5,  1.0, 0.0, 0.0,  0.0, 0.0,
+             0.5, -0.5, -0.5,  0.0, 1.0, 0.0,  1.0, 0.0,
+             0.5,  0.5, -0.5,  0.0, 0.0, 1.0,  1.0, 1.0,
+            -0.5,  0.5, -0.5,  1.0, 1.0, 1.0,  0.0, 1.0,
+
+             0.5, -0.5, -0.5,  1.0, 0.0, 0.0,  0.0, 0.0,
+             0.5,  0.5, -0.5,  0.0, 1.0, 0.0,  1.0, 0.0,
+             0.5,  0.5,  0.5,  0.0, 0.0, 1.0,  1.0, 1.0,
+             0.5, -0.5,  0.5,  1.0, 1.0, 1.0,  0.0, 1.0,
+
+            -0.5,  0.5, -0.5,  1.0, 0.0, 0.0,  0.0, 0.0,
+            -0.5, -0.5, -0.5,  0.0, 1.0, 0.0,  1.0, 0.0,
+            -0.5, -0.5,  0.5,  0.0, 0.0, 1.0,  1.0, 1.0,
+            -0.5,  0.5,  0.5,  1.0, 1.0, 1.0,  0.0, 1.0,
+
+            -0.5, -0.5, -0.5,  1.0, 0.0, 0.0,  0.0, 0.0,
+             0.5, -0.5, -0.5,  0.0, 1.0, 0.0,  1.0, 0.0,
+             0.5, -0.5,  0.5,  0.0, 0.0, 1.0,  1.0, 1.0,
+            -0.5, -0.5,  0.5,  1.0, 1.0, 1.0,  0.0, 1.0,
+
+             0.5,  0.5, -0.5,  1.0, 0.0, 0.0,  0.0, 0.0,
+            -0.5,  0.5, -0.5,  0.0, 1.0, 0.0,  1.0, 0.0,
+            -0.5,  0.5,  0.5,  0.0, 0.0, 1.0,  1.0, 1.0,
+             0.5,  0.5,  0.5,  1.0, 1.0, 1.0,  0.0, 1.0]
+
+indices = [0,  1,  2,  2,  3,  0,
+           4,  5,  6,  6,  7,  4,
+           8,  9, 10, 10, 11,  8,
+          12, 13, 14, 14, 15, 12,
+          16, 17, 18, 18, 19, 16,
+          20, 21, 22, 22, 23, 20]
+
+
 vertices = np.array(vertices, dtype=np.float32)
 indices = np.array(indices,dtype=np.int32)
+#Vertex Array 
 vertex_array_id = glGenVertexArrays(1)
 glBindVertexArray(vertex_array_id)
+#Compiling shaders
 prog = compileProgram(compileShader('shaders/cube_vs.glsl', GL_VERTEX_SHADER), compileShader('shaders/cube_fs.glsl', GL_FRAGMENT_SHADER))
+#Vertex buffer object
 VBO = glGenBuffers(1)
 glBindBuffer(GL_ARRAY_BUFFER, VBO)
 glBufferData(GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL_STATIC_DRAW)
+#Element buffer object
 EBO_id = glGenBuffers(1)
 glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO_id)
 glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, GL_STATIC_DRAW)
+#Positon attribute
 position = glGetAttribLocation(prog, "a_position")
 glEnableVertexAttribArray(position)
-glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, 24, ctypes.c_void_p(0))
-
-rotation_loc = glGetUniformLocation(prog, "rotation")
+glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(0))
+#Rotation attribute
+rotation_loc = glGetUniformLocation(prog, "a_rotation")
 if rotation_loc == GL_INVALID_VALUE or rotation_loc == GL_INVALID_OPERATION:
     print("error")
+#Color attribute
 color = glGetAttribLocation(prog, "a_color")
 glEnableVertexAttribArray(color)
-glVertexAttribPointer(color, 3, GL_FLOAT, GL_FALSE, 24, ctypes.c_void_p(12))
+glVertexAttribPointer(color, 3, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(12))
+#Texture attribute
+texture = glGetAttribLocation(prog, "a_texture")
+glEnableVertexAttribArray(texture)
+glVertexAttribPointer(texture, 2, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(4*6))
+#Sample
+texture_id = glGenTextures(1)
+glBindTexture(GL_TEXTURE_2D, texture_id)
+
+# Set the texture wrapping parameters
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+# Set texture filtering parameters
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
+glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
+
+# load image
+image = Image.open("textures/cat.png")
+image = image.transpose(Image.FLIP_TOP_BOTTOM)
+img_data = image.convert("RGBA").tobytes()
+# img_data = np.array(image.getdata(), np.uint8) # second way of getting the raw image data
+glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, GL_UNSIGNED_BYTE, img_data)
+
+
 glBindVertexArray(0)
 
-glClearColor(0, 0.1, 0.1, 1)
+glClearColor(0, 0.3, 0.4, 1)
 glEnable(GL_DEPTH_TEST)
 glEnable(GL_BLEND)
 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
