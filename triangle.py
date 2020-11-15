@@ -5,9 +5,12 @@ import numpy as np
 import pyrr
 from PIL import Image
 
+new_width = 1280
+new_height = 720
 # glfw callback functions
 def window_resize(window, width, height):
     glViewport(0, 0, width, height)
+    new_width,new_height = width,height
 
 # initializing glfw library
 if not glfw.init():
@@ -94,10 +97,11 @@ glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, GL_STATIC_DRAW)
 position = glGetAttribLocation(prog, "a_position")
 glEnableVertexAttribArray(position)
 glVertexAttribPointer(position, 3, GL_FLOAT, GL_FALSE, 32, ctypes.c_void_p(0))
-#Rotation attribute
-rotation_loc = glGetUniformLocation(prog, "a_rotation")
-if rotation_loc == GL_INVALID_VALUE or rotation_loc == GL_INVALID_OPERATION:
-    print("error")
+#uniforms
+model_loc = glGetUniformLocation(prog, "model")
+projection_loc = glGetUniformLocation(prog, "projection")
+mat_translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([0,0,-5]))
+
 #Color attribute
 color = glGetAttribLocation(prog, "a_color")
 glEnableVertexAttribArray(color)
@@ -118,7 +122,7 @@ glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR)
 glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR)
 
 # load image
-image = Image.open("textures/cat.png")
+image = Image.open("textures/crate.jpg")
 image = image.transpose(Image.FLIP_TOP_BOTTOM)
 img_data = image.convert("RGBA").tobytes()
 # img_data = np.array(image.getdata(), np.uint8) # second way of getting the raw image data
@@ -127,7 +131,7 @@ glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image.width, image.height, 0, GL_RGBA, G
 
 glBindVertexArray(0)
 
-glClearColor(0, 0.3, 0.4, 1)
+glClearColor(0, 0.2, 0.2, 1)
 glEnable(GL_DEPTH_TEST)
 glEnable(GL_BLEND)
 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
@@ -139,10 +143,15 @@ while not glfw.window_should_close(window):
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
     glClear(GL_COLOR_BUFFER_BIT)
     glBindVertexArray(vertex_array_id)
+    mat_projection = pyrr.matrix44.create_perspective_projection(45,new_width/new_height,0.1,100.0)
+    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, mat_projection)
     rot_x = pyrr.Matrix44.from_x_rotation(0.5 * glfw.get_time())
     rot_y = pyrr.Matrix44.from_y_rotation(0.8 * glfw.get_time())
-    m = pyrr.matrix44.multiply(rot_x, rot_y)
-    glUniformMatrix4fv(rotation_loc, 1, GL_FALSE, m)
+    mat_rotation = pyrr.matrix44.multiply(rot_x, rot_y)
+    mat_identity = pyrr.matrix44.create_identity()
+    mat_model = pyrr.matrix44.multiply(mat_rotation,mat_translation)
+    glUniformMatrix4fv(model_loc, 1, GL_FALSE, mat_model)
+    glUniformMatrix4fv(projection_loc, 1, GL_FALSE, mat_projection)
 
     glDrawElements(GL_TRIANGLES,36,GL_UNSIGNED_INT,None)
     glfw.swap_buffers(window)
