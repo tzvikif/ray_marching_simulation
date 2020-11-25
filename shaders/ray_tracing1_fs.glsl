@@ -4,6 +4,7 @@ in vec2 v_uv;
 out vec4 fragColor;
 
 uniform vec2 a_resolution;
+uniform vec3 a_sphere1_pos;
 
 // Super simple raymarching example. Created by Reinder Nijhoff 2017
 // Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License.
@@ -61,8 +62,8 @@ void main() {
     if (h < 0.01) {
         vec3 p = ro + rd * t;
         vec3 normal = calcNormal(p);
-        float x = 0.3;
-        vec3 light = vec3(x, 2, 0);
+        //vec3 light = vec3(0.3, 2, 0);
+        vec3 light = a_sphere1_pos;
         
         // Calculate diffuse lighting by taking the dot product of 
         // the light direction (light-p) and the normal.

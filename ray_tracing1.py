@@ -65,6 +65,8 @@ glBindBuffer(GL_ELEMENT_ARRAY_BUFFER,EBO_id)
 glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, GL_STATIC_DRAW)
 #uniforms
 resolusion_loc = glGetUniformLocation(prog, "a_resolution")
+sphere1_pos_loc = glGetUniformLocation(prog, "a_sphere1_pos")
+
 #Positon attribute
 position = glGetAttribLocation(prog, "a_position")
 glEnableVertexAttribArray(position)
@@ -79,7 +81,8 @@ glClearColor(0, 0.2, 0.2, 1)
 glEnable(GL_DEPTH_TEST)
 glEnable(GL_BLEND)
 glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-
+angle_deg = 0
+mat_translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([0.3, 2, 0]))
 # the main application loop
 while not glfw.window_should_close(window):
     glfw.poll_events()
@@ -87,8 +90,14 @@ while not glfw.window_should_close(window):
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
     glClear(GL_COLOR_BUFFER_BIT)
     glBindVertexArray(vertex_array_id)
-    #glUniformv2f(resolusion_loc,new_width,new_height)
+    
+    mat_rotation = pyrr.Matrix44.from_y_rotation(0.5 * glfw.get_time())
+    mat_identity = pyrr.matrix44.create_identity()
+    mat_model = pyrr.matrix44.multiply(mat_translation,mat_rotation)
+    sphere1_pos = pyrr.matrix44.apply_to_vector(mat_model,pyrr.Vector3([0, 0, -5]))
     glUniform2f(resolusion_loc,new_width,new_height)
+    glUniform3f(sphere1_pos_loc,sphere1_pos[0],sphere1_pos[1],sphere1_pos[2])
+
     glDrawElements(GL_TRIANGLES,6,GL_UNSIGNED_INT,None)
     glfw.swap_buffers(window)
 
