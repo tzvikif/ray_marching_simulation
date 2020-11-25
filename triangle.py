@@ -5,6 +5,7 @@ import numpy as np
 import pyrr
 from PIL import Image
 
+
 new_width = 1280
 new_height = 720
 # glfw callback functions
