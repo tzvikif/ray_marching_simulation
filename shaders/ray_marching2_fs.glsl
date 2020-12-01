@@ -35,7 +35,8 @@ float sphereSDF(vec3 samplePoint) {
  * negative indicating inside.
  */
 float sceneSDF(vec3 samplePoint) {
-    return sphereSDF(samplePoint);
+    float displacement = sin(sin(iTime)*5.0 * samplePoint.x) * sin(sin(iTime*2.0)*5.0 * samplePoint.y) * sin(sin(iTime)*5.0 * samplePoint.z) * 0.25;
+    return displacement+sphereSDF(samplePoint);
 }
 
 /**
