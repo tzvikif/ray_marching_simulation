@@ -36,7 +36,12 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     {
         vec3 pos = ro+t*rd;
         vec3 nor = calcNormal(pos);
-        col = nor.yyy;
+        
+        vec3 sun_dir = normalize(vec3(0.8,0.4,-0.2));
+        float sun_dif = clamp(dot(sun_dir,nor),0.0,1.0);
+        float sky_dir = clamp(0.5+0.5*dot(sun_dir,vec3(0.0,1.0,0.0)),0.0,1.0);
+        col = vec3(1.0,0.7,0.5)*sun_dif;
+        col += vec3(0.0,0.1,0.3)*sky_dir;
     }
     // Output to screen
     fragColor = vec4(col,1.0);
