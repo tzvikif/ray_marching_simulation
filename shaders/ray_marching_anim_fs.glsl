@@ -36,8 +36,16 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
 {
     // Normalized pixel coordinates (from 0 to 1)
     vec2 p = (2.0*fragCoord-iResolution.xy)/iResolution.y;
-	vec3 ro = vec3(0.0,0.0,1.0);	//ray origion(camera)
-    vec3 rd = normalize(vec3(p,-1.5));
+    float an = 10.0*iMouse.x/iResolution.x;// iTime;
+	vec3 ro = vec3(1.0*sin(an),0.0,1.0*cos(an));	//ray origion(camera)
+    vec3 ta = vec3(0.0,0.0,0.0);
+    
+    vec3 ww = normalize(ta-ro);
+    vec3 uu = normalize(cross(ww,vec3(0.0,1.0,0.0)) );
+    vec3 vv = normalize( cross(uu,ww) );
+    
+    
+    vec3 rd = normalize(p.x*uu+p.y*vv+1.5*ww);
     vec3 col = vec3(0.4,0.75,1.0) - 0.5*p.y;
     col = mix(col,vec3(0.7,0.75,0.8),exp(-10.0*rd.y));
     float t = castRay(ro,rd);
