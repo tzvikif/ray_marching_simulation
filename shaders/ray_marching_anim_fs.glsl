@@ -1,8 +1,25 @@
+float sdElipsoid(in vec3 pos,in vec3 rad)
+{
+    float k0 = length(pos/rad);
+    float k1 = length(pos/rad/rad);
+    return k0*(k0-1.0)/k1;
+}
+float sdGuy(vec3 pos)
+{
+    float t = fract(iTime);
+    float y = 4.0*t*(1.0-t);
+    vec3 cen = vec3(0.0,y,0.0);
+    float sy = 0.5+0.5*y;
+    float sz = 1.0/sy;
+    vec3 rad = vec3(0.25,0.25*sy,0.25*sz);
+    float d = sdElipsoid(pos-cen,rad);
+    return d;
+}
 float map(in vec3 pos)
 {
-    float d = length(pos)-0.25;
+    float d1 = sdGuy(pos);
     float d2 = pos.y-(-0.25);
-    return min(d,d2);
+    return min(d1,d2);
     
 }
 vec3 calcNormal(in vec3 pos)
@@ -37,15 +54,15 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     // Normalized pixel coordinates (from 0 to 1)
     vec2 p = (2.0*fragCoord-iResolution.xy)/iResolution.y;
     float an = 10.0*iMouse.x/iResolution.x;// iTime;
-	vec3 ro = vec3(1.0*sin(an),0.0,1.0*cos(an));	//ray origion(camera)
-    vec3 ta = vec3(0.0,0.0,0.0);
+    vec3 ta = vec3(0.0,0.5,0.0);
+    vec3 ro = ta+vec3(1.5*sin(an),0.0,1.5*cos(an));	//ray origion(camera)
     
     vec3 ww = normalize(ta-ro);
     vec3 uu = normalize(cross(ww,vec3(0.0,1.0,0.0)) );
     vec3 vv = normalize( cross(uu,ww) );
     
     
-    vec3 rd = normalize(p.x*uu+p.y*vv+1.5*ww);
+    vec3 rd = normalize(p.x*uu+p.y*vv+1.8*ww);
     vec3 col = vec3(0.4,0.75,1.0) - 0.5*p.y;
     col = mix(col,vec3(0.7,0.75,0.8),exp(-10.0*rd.y));
     float t = castRay(ro,rd);
