@@ -4,16 +4,38 @@ float sdElipsoid(in vec3 pos,in vec3 rad)
     float k1 = length(pos/rad/rad);
     return k0*(k0-1.0)/k1;
 }
+float sdSphere(in vec3 pos,in float rad)
+{
+	float d = length(pos) - rad;
+    return d;
+}
+float smin(in float a,in float b,in float k)
+{
+	float h = max(k-abs(a-b),0.0);
+    return min(a,b) - h*h/(k*4.0);
+
+}
 float sdGuy(vec3 pos)
 {
     float t = fract(iTime);
+    //t = 0.5;
     float y = 4.0*t*(1.0-t);
     vec3 cen = vec3(0.0,y,0.0);
     float sy = 0.5+0.5*y;
     float sz = 1.0/sy;
     vec3 rad = vec3(0.25,0.25*sy,0.25*sz);
-    float d = sdElipsoid(pos-cen,rad);
-    return d;
+    vec3 q = pos-cen;
+    float d_body = sdElipsoid(q,rad);
+    //head
+    vec3 pos_head = vec3(q) - vec3(0.0,0.28,0.0);
+    float d_head = sdElipsoid(pos_head,vec3(0.2));
+    float d_back_head = sdElipsoid(pos_head+vec3(0.0,0.0,0.1),vec3(0.2));
+	float d = smin(d_head,d_back_head,0.03);
+    d = smin(d_body,d,0.1);
+    //eyes
+    float d_eyes = sdSphere(pos_head - vec3(0.15,0.15,-0.15),0.05);
+    
+    return min(d,d_eyes);
 }
 float map(in vec3 pos)
 {
@@ -54,7 +76,7 @@ void mainImage( out vec4 fragColor, in vec2 fragCoord )
     // Normalized pixel coordinates (from 0 to 1)
     vec2 p = (2.0*fragCoord-iResolution.xy)/iResolution.y;
     float an = 10.0*iMouse.x/iResolution.x;// iTime;
-    vec3 ta = vec3(0.0,0.5,0.0);
+    vec3 ta = vec3(0.0,0.8,0.0);
     vec3 ro = ta+vec3(1.5*sin(an),0.0,1.5*cos(an));	//ray origion(camera)
     
     vec3 ww = normalize(ta-ro);
