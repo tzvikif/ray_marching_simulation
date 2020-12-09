@@ -23,19 +23,19 @@ float sdGuy(vec3 pos)
     vec3 cen = vec3(0.0,y,0.0);
     float sy = 0.5+0.5*y;
     float sz = 1.0/sy;
-    vec3 rad = vec3(0.25,0.25*sy,0.25*sz);
-    vec3 q = pos-cen;
-    float d_body = sdElipsoid(q,rad);
+    vec3 rad = vec3(0.25,0.25*sy,0.25*sz);	//radius
+    vec3 pos_body = pos-cen;	
+    float d_body = sdElipsoid(pos_body,rad);
     //head
-    vec3 pos_head = vec3(q) - vec3(0.0,0.28,0.0);
-    float d_head = sdElipsoid(pos_head,vec3(0.2));
-    float d_back_head = sdElipsoid(pos_head+vec3(0.0,0.0,0.1),vec3(0.2));
-	float d = smin(d_head,d_back_head,0.03);
-    d = smin(d_body,d,0.1);
+    float d_head = sdElipsoid(pos_body-vec3(0.0,0.28,0.0),vec3(0.2));
+    float d_back_head = sdElipsoid(pos_body-vec3(0.0,0.28,-0.1),vec3(0.2));
+    float d = smin(d_body,d_head,0.1);
+	d = smin(d,d_back_head,0.03);
     //eyes
-    float d_eyes = sdSphere(pos_head - vec3(0.15,0.15,-0.15),0.05);
-    
-    return min(d,d_eyes);
+    vec3 sh = vec3(abs(pos_body.x),pos_body.yz);
+    float d_eyes = sdSphere(sh - vec3(0.08,0.28,0.16),0.05);
+    d = min(d,d_eyes);
+    return d;
 }
 float map(in vec3 pos)
 {
