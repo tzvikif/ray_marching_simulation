@@ -1,3 +1,16 @@
+# version 330 core
+
+in vec2 v_uv;
+out vec4 fragColor;
+uniform vec2 a_resolution;
+uniform float a_time;
+uniform vec2 a_mouse;
+
+vec2 iResolution = a_resolution;
+vec2 fragCoord = v_uv*iResolution;
+float iTime = a_time;
+vec2 iMouse = a_mouse;
+
 float sdElipsoid(in vec3 pos,in vec3 rad)
 {
     float k0 = length(pos/rad);
@@ -71,8 +84,9 @@ float castRay(in vec3 ro ,in vec3 rd)
     return t;
 }
 
-void mainImage( out vec4 fragColor, in vec2 fragCoord )
+void main()
 {
+    //vec2 iMouse=vec2(50.0,0.0);
     // Normalized pixel coordinates (from 0 to 1)
     vec2 p = (2.0*fragCoord-iResolution.xy)/iResolution.y;
     float an = 10.0*iMouse.x/iResolution.x;// iTime;

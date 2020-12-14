@@ -54,7 +54,7 @@ indices = np.array(indices,dtype=np.int32)
 vertex_array_id = glGenVertexArrays(1)
 glBindVertexArray(vertex_array_id)
 #Compiling shaders
-prog = compileProgram(compileShader('shaders/ray_marching2_vs.glsl', GL_VERTEX_SHADER), compileShader('shaders/ray_marching2_fs.glsl', GL_FRAGMENT_SHADER))
+prog = compileProgram(compileShader('shaders/ray_marching2_vs.glsl', GL_VERTEX_SHADER), compileShader('shaders/ray_marching_anim_fs.glsl', GL_FRAGMENT_SHADER))
 #Vertex buffer object
 VBO = glGenBuffers(1)
 glBindBuffer(GL_ARRAY_BUFFER, VBO)
@@ -66,6 +66,7 @@ glBufferData(GL_ELEMENT_ARRAY_BUFFER, indices.nbytes, indices, GL_STATIC_DRAW)
 #uniforms
 resolusion_loc = glGetUniformLocation(prog, "a_resolution")
 time_loc = glGetUniformLocation(prog,"a_time")
+mouse_loc = glGetUniformLocation(prog,"a_mouse")
 
 #Positon attribute
 position = glGetAttribLocation(prog, "a_position")
@@ -84,17 +85,22 @@ glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
 angle_deg = 0
 mat_translation = pyrr.matrix44.create_from_translation(pyrr.Vector3([0.3, 2, 0]))
 # the main application loop
+mouse_pos = [new_width/4.0,0.0]
 while not glfw.window_should_close(window):
     glfw.poll_events()
     glUseProgram(prog)
     glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT)
     glClear(GL_COLOR_BUFFER_BIT)
     glBindVertexArray(vertex_array_id)
-    
+    current_mouse_pos = glfw.get_cursor_pos(window)
+    is_button_clicked = glfw.get_mouse_button(window,glfw.MOUSE_BUTTON_1)
     #mat_rotation = pyrr.Matrix44.from_y_rotation(0.5 * glfw.get_time())
     #mat_identity = pyrr.matrix44.create_identity()
     #mat_model = pyrr.matrix44.multiply(mat_translation,mat_rotation)
     #sphere1_pos = pyrr.matrix44.apply_to_vector(mat_model,pyrr.Vector3([0, 0, -5]))
+    if (is_button_clicked == True):
+        mouse_pos = current_mouse_pos
+    glUniform2f(mouse_loc,mouse_pos[0],mouse_pos[1])
     glUniform2f(resolusion_loc,new_width,new_height)
     glUniform1f(time_loc,glfw.get_time())
     #glUniform3f(sphere1_pos_loc,sphere1_pos[0],sphere1_pos[1],sphere1_pos[2])
