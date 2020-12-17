@@ -11,6 +11,7 @@ vec2 fragCoord = v_uv*iResolution;
 float iTime = a_time;
 vec2 iMouse = a_mouse;
 
+
 float sdElipsoid(in vec3 pos,in vec3 rad)
 {
     float k0 = length(pos/rad);
@@ -28,6 +29,13 @@ float smin(in float a,in float b,in float k)
     return min(a,b) - h*h/(k*4.0);
 
 }
+float smax(in float a,in float b,in float k)
+{
+	float h = max(k-abs(a-b),0.0);
+    return max(a,b) + h*h/(k*4.0);
+
+}
+
 vec2 sdGuy(vec3 pos)
 {
     float t = fract(iTime);
@@ -39,18 +47,31 @@ vec2 sdGuy(vec3 pos)
     vec3 rad = vec3(0.25,0.25*sy,0.25*sz);	//radius
     vec3 pos_body = pos-cen;	
     float d_body = sdElipsoid(pos_body,rad);
-    //head
-    float d_head = sdElipsoid(pos_body-vec3(0.0,0.28,0.0),vec3(0.2));
-    float d_back_head = sdElipsoid(pos_body-vec3(0.0,0.28,-0.1),vec3(0.2));
-    float d = smin(d_body,d_head,0.1);
-	d = smin(d,d_back_head,0.03);
-    vec2 res = vec2(d,2.0);
-    //eyes
     vec3 sh = vec3(abs(pos_body.x),pos_body.yz);
+    //head
+    float d_head = sdElipsoid(pos_body-vec3(0.0,0.28,0.0),vec3(0.15,0.2,0.23));
+    float d = smin(d_body,d_head,0.1);
+    float d_back_head = sdElipsoid(pos_body-vec3(0.0,0.28,-0.1),vec3(0.2,0.2,0.2));
+	d = smin(d,d_back_head,0.03);
+    vec3 eb = sh-vec3(0.12,0.34,0.15);
+    eb.xy = mat2(3,4,-4,3)/5.0*eb.xy;
+    float d_eye_brows = sdElipsoid(eb,vec3(0.06,0.035,0.05));
+    d = smin(d_eye_brows,d,0.04);
+    
+    //mouth
+    float d_mouth = sdElipsoid(pos_body-vec3(0.0,0.15+3.0*pos_body.x*pos_body.x,0.1),vec3(0.1,0.04,0.15));
+    d = smax(d,-d_mouth,0.04);
+    vec2 res = vec2(d,2.0); 
+    //eyes
     float d_eyes = sdSphere(sh - vec3(0.08,0.28,0.16),0.05);
     if(d_eyes<d)
     {
     	res = vec2(d_eyes,3.0);
+    }
+    float d_pupils = sdSphere(sh - vec3(0.08,0.28,0.18),0.02);
+    if(d_pupils<d)
+    {
+    	res = vec2(d_pupils,4.0);
     }
     
     return res;
@@ -61,6 +82,22 @@ vec2 map(in vec3 pos)
     float d2 = pos.y-(-0.25);
     return (d2<d1.x)?vec2(d2,1.0):d1;
 }
+float castShadow(in vec3 ro,in vec3 rd)
+{
+    float res = 1.0;
+    float t = 0.001;
+    for(int i=0;i<100;i++)
+    {
+        vec3 pos = ro + rd*t;
+        float h = map(pos).x;
+        res = min(res,16.0*h/t);
+        t+=h;
+        if(t>20.0)
+            break;
+    }
+    return res;
+}
+
 vec3 calcNormal(in vec3 pos)
 {
     vec2 e = vec2(0.00001,0.0);
@@ -123,16 +160,20 @@ void main()
         {
         	mate = vec3(0.2,0.1,0.02);
         }
-        else 
+        else if(t_obj.y<3.5)
         {
         	mate = vec3(0.4,0.4,0.4);
         }
+        else if(t_obj.t<4.5)
+        {
+        	mate = vec3(0.01);
+        }
         vec3 sun_dir = normalize(vec3(0.8,0.3,0.2));
         float sun_dif = clamp(dot(sun_dir,nor),0.0,1.0);
-        float sun_sha = step(castRay(pos+nor*0.001,sun_dir).x,0.0);
+        float sun_sha = castShadow(pos+nor*0.001,sun_dir);
         float sky_dif = clamp(0.5+0.5*dot(nor,vec3(0.0,1.0,0.0)),0.0,1.0);
         float bou_dif = clamp(0.5+0.5*dot(nor,vec3(0.0,-1.0,0.0)),0.0,1.0);
-        //sun_sha = 0.0;
+        //sun_sha = 1.0;
         col = mate*vec3(7.0,5.0,3.0)*sun_dif*sun_sha;
         col += mate*vec3(0.5,0.8,0.9)*sky_dif;
         col += mate*vec3(0.7,0.3,0.2)*bou_dif;
