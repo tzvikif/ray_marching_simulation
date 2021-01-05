@@ -12,6 +12,7 @@ float iTime = a_time;
 vec2 iMouse = a_mouse;
 
 
+
 float sdElipsoid(in vec3 pos,in vec3 rad)
 {
     float k0 = length(pos/rad);
@@ -41,13 +42,16 @@ vec2 sdGuy(vec3 pos)
     float t = fract(iTime);
     //t = 0.5;
     float y = 4.0*t*(1.0-t);
-    vec3 cen = vec3(0.0,y,0.0);
+    vec3 cen = vec3(0.0,y,iTime);
     float sy = 0.5+0.5*y;
     float sz = 1.0/sy;
-    vec3 rad = vec3(0.25,0.25*sy,0.25*sz);	//radius
+    vec3 rad = vec3(0.2*sz,0.3*sy,0.2*sz);	//radius
     vec3 pos_body = pos-cen;	
     float d_body = sdElipsoid(pos_body,rad);
     vec3 sh = vec3(abs(pos_body.x),pos_body.yz);
+    vec3 pos_temp = pos_body;
+    //float pos_delta = 0.05*smoothstep(-0.5,0.5,sin(t));
+    //pos_temp.z += pos_delta;
     //head
     float d_head = sdElipsoid(pos_body-vec3(0.0,0.28,0.0),vec3(0.15,0.2,0.23));
     float d = smin(d_body,d_head,0.1);
@@ -76,11 +80,18 @@ vec2 sdGuy(vec3 pos)
     
     return res;
 }
+vec2 sdGround(vec3 pos)
+{
+    float floor_height = -0.1+0.1*(sin(2.0*pos.x)+sin(2.0*pos.z));
+    float d2 = pos.y-(floor_height);
+    return vec2(d2,4.0);
+}
+
 vec2 map(in vec3 pos)
 {
     vec2 d1 = sdGuy(pos);
-    float d2 = pos.y-(-0.25);
-    return (d2<d1.x)?vec2(d2,1.0):d1;
+    vec2 d2 = sdGround(pos);
+    return (d2.x<d1.x)?vec2(d2.x,1.0):d1;
 }
 float castShadow(in vec3 ro,in vec3 rd)
 {
@@ -134,7 +145,7 @@ void main()
     // Normalized pixel coordinates (from 0 to 1)
     vec2 p = (2.0*fragCoord-iResolution.xy)/iResolution.y;
     float an = 10.0*iMouse.x/iResolution.x;// iTime;
-    vec3 ta = vec3(0.0,0.8,0.0);
+    vec3 ta = vec3(0.0,0.8,0.8+iTime);
     vec3 ro = ta+vec3(1.5*sin(an),0.0,1.5*cos(an));	//ray origion(camera)
     
     vec3 ww = normalize(ta-ro);
@@ -154,7 +165,9 @@ void main()
         vec3 mate = vec3(0.18);
         if(t_obj.y<1.5)
         {
-        	mate = vec3(0.05,0.1,0.02);
+            mate = vec3(0.05,0.1,0.02);//floor
+            float f = -1.0+2.0*smoothstep(-0.2,0.2,sin(18.0*pos.x)+sin(18.0*pos.z));
+            mate+=0.2*f*vec3(0.06,0.06,0.2);
         }
         else if(t_obj.y<2.5)
         {
