@@ -184,3 +184,32 @@ The figure is moving towards the negative z axis and camera is following that di
 with the Mouse one can change the view angle.
 
 
+## Animation
+Basically the animation is a movement in the y axis direction.
+I get from the OpenGL program the time as a uniform parameter.
+and use the fract  function to get just the fraction part of the time.
+
+```python
+float t = fract(iTime);
+```
+So t gets the following values:
+t=0.0,0.1,…,0.9,0.0,0.1,…
+Then I calculate the y position which is parabolic in t.
+```python
+float y = 4.0*t*(1.0-t);
+vec3 cen = vec3(0.0,y,0.0);
+```
+cen is the center of the figure.
+the parabola roots are f(0)=f(1)=0 (according to our domain) and the maxima is at f(-0.5)=1. Meaning: 0≤y≤1
+Now I calculate the radius of the body(lower altitude -> squeezed body)
+
+```python
+float sy = 0.5+0.5*y;
+float sz = 1.0/sy;
+vec3 rad = vec3(0.25,0.25*sy,0.25*sz);
+```
+lastly i’m calling the signed functions with the new position and new radius.
+```python
+vec3 pos_body = pos-cen;    
+    float d_body = sdElipsoid(pos_body,rad);
+```
