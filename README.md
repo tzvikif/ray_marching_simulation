@@ -217,6 +217,13 @@ vec3 pos_body = pos-cen;
 Refereces:
 
 http://jamie-wong.com/2016/07/15/ray-marching-signed-distance-functions/
+
 https://michaelwalczyk.com/blog-ray-marching.html
+
 https://www.youtube.com/channel/UCdmAhiG8HQDlz8uyekw4ENw
+
+https://thebookofshaders.com/
+
+https://learnopengl.com/Introduction
+
 
